@@ -5,6 +5,11 @@ TagManager:
   serializedVersion: 2
   tags:
   - Fuel
+  - Oil
+  - Door
+  - Collectable
+  - Carriage
+  - Obstacle
   layers:
   - Default
   - TransparentFX

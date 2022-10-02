@@ -5,7 +5,8 @@ public enum GameState
 {
     Idle,
     Play,
-    Finish
+    Finish,
+    Over
 }
 
 public enum MotionType
@@ -21,4 +22,10 @@ public enum ShakeType
     Position,
     Rotation,
     Scale
+}
+
+public enum CollactableType
+{
+    Human,
+    Coal
 }

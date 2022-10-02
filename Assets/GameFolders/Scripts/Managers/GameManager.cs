@@ -4,17 +4,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
-using GameAnalyticsSDK;
 
 public class GameManager : MonoSingleton<GameManager>
 {
-    private EventData eventData;
+    private EventData _eventData;
     
     [SerializeField] int levelCount;
     [SerializeField] int randomLevelLowerLimit;
     [SerializeField] int goldCoefficient;
     
-    GameState _gameState = GameState.Play;
+    GameState _gameState = GameState.Idle;
 
     public GameState GameState
     {
@@ -69,24 +68,57 @@ public class GameManager : MonoSingleton<GameManager>
 
     private void Awake()
     {
+        _eventData = Resources.Load("EventData") as EventData;
+
         Singleton(true);
-        GameAnalytics.Initialize();
-        GameAnalytics.NewDesignEvent("Game Start");
     }
 
     private void Start()
     {
-        eventData = Resources.Load("EventData") as EventData;
-        
         if (SceneManager.GetActiveScene().buildIndex == 0)
         {
             SceneManager.LoadScene(Level);
         }
     }
+
+    private void OnEnable()
+    {
+        _eventData.OnFinish += Finish;
+        _eventData.OnOver += Over;
+        _eventData.OnPlay += StartLevel;
+    }
+    private void OnDisable()
+    {
+        _eventData.OnFinish -= Finish;
+        _eventData.OnOver -= Over;
+        _eventData.OnPlay -= StartLevel;
+    }
+
+    private void Finish()
+    {
+        _gameState = GameState.Finish;
+    }
+
+    private void Over()
+    {
+        _gameState = GameState.Over;
+    }
+
+    private void StartLevel()
+    {
+        _gameState = GameState.Play;
+    }
     
     public void NextLevel()
     {
-        _gameState = GameState.Play;
+        _gameState = GameState.Idle;
+        Level++;
+        SceneManager.LoadScene(Level);
+    }
+    
+    public void RestartLevel()
+    {
+        _gameState = GameState.Idle;
         SceneManager.LoadScene(Level);
     }
 }

@@ -1,60 +1,176 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
 public class TrainController : MonoBehaviour
 {
-    [SerializeField] DynamicJoystick dynamicJoystick;
-    [SerializeField] float horizontalSpeed;
-    [SerializeField] float verticalSpeed;
-    [SerializeField] float boundary;
+    private EventData _eventData;
+    private Carriage[] _carriages;
+    private MovementData _movementData;
+    private Rigidbody _rigidbody;
+    private Transform locomotive;
 
-    Rigidbody _rigidbody;
+    private CollactableType _collactableType;
 
-    float horizontal;
-    float fuel = 100f;
+    private float speed;
+    private float _fuel;
+    private float _trainWeight;
+    private int carriageIndex = 0;
 
     private void Awake()
     {
+        _eventData = Resources.Load("EventData") as EventData;
+        _movementData = Resources.Load("MovementData") as MovementData;
+        
         _rigidbody = GetComponent<Rigidbody>();
+        _carriages = GetComponentsInChildren<Carriage>();
+    }
+
+    private void OnEnable()
+    {
+        _eventData.OnPlay += StartGame;
+    }
+
+    private void OnDisable()
+    {
+        _eventData.OnPlay -= StartGame;
+    }
+
+    private void Start()
+    {
+        SetFollowersTargets();
+        
+        _fuel = _movementData.StartFuelAmount;
+        _trainWeight = _movementData.StartTrainWeight;
+    }
+    
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag(Constants.Tags.FUEL))
+        {
+            _fuel += other.GetComponent<FuelBarrel>().GetFuelAmount();
+            Destroy(other.gameObject);
+        }
+
+        if (other.CompareTag(Constants.Tags.OBSTACLE))
+        {
+            // Obstacle Process
+        }
+
+        if (other.CompareTag(Constants.Tags.COLLECTABLE))
+        {
+            if (other.GetComponent<Collactable>().CollectaleType == _collactableType)
+            {
+                // Doğru seçim
+                OpenCarraigeItem();
+            }
+            else
+            {
+                // yanlış seçim
+                // Give feedback
+            }
+            
+            Destroy(other.gameObject);
+        }
+
+        if (other.CompareTag(Constants.Tags.DOOR))
+        {
+            _collactableType = other.GetComponent<Door>().GetCollectableType(locomotive);
+
+            foreach (Carriage carriage in _carriages)
+            {
+                carriage.SetItemType(_collactableType);
+            }
+        }
+
+        if (other.CompareTag(Constants.Tags.CARRIGE))
+        {
+            if (carriageIndex < _carriages.Length)
+            {
+                _carriages[carriageIndex].OpenCarriage();
+                carriageIndex++;
+                _trainWeight += _movementData.EachCarriageWaieght;
+            }
+
+            Destroy(other.gameObject);
+        }
+
+        if (other.CompareTag(Constants.Tags.FINISH))
+        {
+            _eventData.OnFinish?.Invoke();
+        }
     }
 
     private void Update()
     {
-        if(fuel > 100) fuel = 100;
+        if (!CanMove()) return;
 
-        horizontal = dynamicJoystick.Horizontal;
-        fuel -= Time.deltaTime * 2f;
+        _fuel -= _trainWeight * Time.deltaTime;
+        UIController.Instance.SetFuelBarValue(_fuel / _movementData.MaxFuelAmount);
     }
+
     private void FixedUpdate()
     {
+        if (!CanMove()) return;
 
-        if (transform.position.x < -boundary && horizontal < 0
-            ||
-            transform.position.x > boundary && horizontal > 0)
+        Move();
+    }
+
+    private void StartGame()
+    {
+        StartCoroutine(SpeedUp());
+    }
+    
+    private void SetFollowersTargets()
+    {
+        locomotive = GetComponentInChildren<HorizontalLocalMove>().transform;
+        _carriages[0].Target = locomotive;
+        
+        for (int i = 1; i < _carriages.Length; i++)
         {
-            _rigidbody.velocity = Vector3.forward * verticalSpeed * Time.deltaTime;
-        }
-        else
-        {
-            TrainMove();
+            _carriages[i].Target = _carriages[i - 1].transform;
         }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void Move()
     {
-        if (other.CompareTag("Fuel"))
+        _rigidbody.velocity = Vector3.forward * speed;
+    }
+
+    private void OpenCarraigeItem()
+    {
+        for (int i = 0; i < _carriages.Length; i++)
         {
-            Debug.Log("Calisti");
-            other.transform.DOMoveY(20, 0.25f).SetEase(Ease.InFlash);
-            
-            fuel += 10f;
+            if (!_carriages[i].IsCarriageFull()) break;
         }
     }
 
-    private void TrainMove()
+    private bool CanMove()
     {
-        _rigidbody.velocity = new Vector3(horizontal * horizontalSpeed, 0, verticalSpeed) * Time.deltaTime;
+        if (GameManager.Instance.Playability() && _fuel <= 0)
+        {
+            _eventData.OnOver?.Invoke();
+            return false;
+        }
+        else if (GameManager.Instance.Playability() && _fuel > 0)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+
+
+    IEnumerator SpeedUp()
+    {
+        while (speed < _movementData.VerticalSpeed)
+        {
+            speed += Time.deltaTime * _movementData.VerticalAcceleration;
+
+            yield return null;
+        }
+
+        speed = _movementData.VerticalSpeed;
     }
 }
