@@ -29,3 +29,9 @@ public enum CollactableType
     Human,
     Coal
 }
+public enum CameraMoveType
+{
+    Down,
+    Up,
+    FinishPosition
+}

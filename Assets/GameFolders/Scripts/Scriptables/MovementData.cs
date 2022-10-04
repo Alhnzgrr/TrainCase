@@ -15,6 +15,7 @@ public class MovementData : ScriptableObject
     [SerializeField] private float maxFuelAmount;
     [SerializeField] private float startTrainWeight;
     [SerializeField] private float eachCarriageWaieght;
+    [SerializeField] private int scoreUpdateValue;
 
 
     public float HorizontalSpeed => horizontalSpeed;
@@ -26,5 +27,6 @@ public class MovementData : ScriptableObject
     public Vector2 HorizontalBounds => horizontalBounds;
     public float StartTrainWeight => startTrainWeight;
     public float EachCarriageWaieght => eachCarriageWaieght;
-    
+    public int ScoreUpdateValue => scoreUpdateValue;
+
 }

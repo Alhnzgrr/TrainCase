@@ -9,4 +9,5 @@ public class EventData : ScriptableObject
     public Action OnPlay;
     public Action OnFinish;
     public Action OnOver;
-}
+    public Action OnExplodeFireworks;
+ }

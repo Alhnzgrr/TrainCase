@@ -17,7 +17,8 @@ MonoBehaviour:
   materialHashCode: -1423136482
   m_Version: 1.1.0
   m_SourceFontFileGUID: b7c302f89cb5d452db66256fe9999feb
-  m_SourceFontFile_EditorRef: {fileID: 12800000, guid: b7c302f89cb5d452db66256fe9999feb, type: 3}
+  m_SourceFontFile_EditorRef: {fileID: 12800000, guid: b7c302f89cb5d452db66256fe9999feb,
+    type: 3}
   m_SourceFontFile: {fileID: 0}
   m_AtlasPopulationMode: 0
   m_FaceInfo:
@@ -2545,7 +2546,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: HandoSoftTrial-RegularX SDF Material
   m_Shader: {fileID: 4800000, guid: 68e6db2ebdc24f95958faec2be5558d6, type: 3}
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -2608,7 +2610,7 @@ Material:
     - _Reflectivity: 10
     - _ScaleRatioA: 0.8333333
     - _ScaleRatioB: 0.2754167
-    - _ScaleRatioC: 0.2754167
+    - _ScaleRatioC: 0.13770835
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -2621,9 +2623,9 @@ Material:
     - _StencilWriteMask: 255
     - _TextureHeight: 512
     - _TextureWidth: 512
-    - _UnderlayDilate: 0
-    - _UnderlayOffsetX: 0
-    - _UnderlayOffsetY: 0
+    - _UnderlayDilate: 1
+    - _UnderlayOffsetX: 1
+    - _UnderlayOffsetY: -1
     - _UnderlaySoftness: 0
     - _VertexOffsetX: 0
     - _VertexOffsetY: 0

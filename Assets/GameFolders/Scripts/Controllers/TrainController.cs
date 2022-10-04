@@ -10,6 +10,7 @@ public class TrainController : MonoBehaviour
     private MovementData _movementData;
     private Rigidbody _rigidbody;
     private Transform locomotive;
+    private CameraController _gameCameraController;
 
     private CollactableType _collactableType;
 
@@ -25,6 +26,7 @@ public class TrainController : MonoBehaviour
         
         _rigidbody = GetComponent<Rigidbody>();
         _carriages = GetComponentsInChildren<Carriage>();
+        _gameCameraController = Camera.main.GetComponent<CameraController>();
     }
 
     private void OnEnable()
@@ -44,34 +46,52 @@ public class TrainController : MonoBehaviour
         _fuel = _movementData.StartFuelAmount;
         _trainWeight = _movementData.StartTrainWeight;
     }
-    
+   
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag(Constants.Tags.FUEL))
         {
             _fuel += other.GetComponent<FuelBarrel>().GetFuelAmount();
+            UIController.Instance.PlayFuelAnimation();
             Destroy(other.gameObject);
         }
 
         if (other.CompareTag(Constants.Tags.OBSTACLE))
         {
-            // Obstacle Process
+            if (!other.GetComponent<Obstacle>().CrashTrain)
+            {
+                _fuel -= 10f;
+                _gameCameraController.CameraShake();
+                other.GetComponent<Obstacle>().DestroyEffect();
+                // Obstacle Process
+            }
         }
 
         if (other.CompareTag(Constants.Tags.COLLECTABLE))
         {
             if (other.GetComponent<Collactable>().CollectaleType == _collactableType)
             {
-                // Doğru seçim
-                OpenCarraigeItem();
+                if (!other.GetComponent<Collactable>().OnPlayer)
+                {
+                    // Doğru seçim
+                    other.GetComponent<Collactable>().DestroyEffect();
+                    OpenCarraigeItem();
+                    GameManager.Instance.ScoreUpdate(_movementData.ScoreUpdateValue);
+                    other.GetComponent<Collactable>().OnPlayerTrue();
+                }
             }
             else
             {
-                // yanlış seçim
-                // Give feedback
+                if (!other.GetComponent<Collactable>().OnPlayer)
+                {
+                    // yanlış seçim
+                    // Give feedback
+                    other.GetComponent<Collactable>().ThrowObject();
+                    other.GetComponent<Collactable>().OnPlayerTrue();
+                }
             }
             
-            Destroy(other.gameObject);
+            Destroy(other.gameObject , 0.25f);
         }
 
         if (other.CompareTag(Constants.Tags.DOOR))
@@ -82,12 +102,14 @@ public class TrainController : MonoBehaviour
             {
                 carriage.SetItemType(_collactableType);
             }
+            other.gameObject.tag = "Untagged";
         }
 
         if (other.CompareTag(Constants.Tags.CARRIGE))
         {
             if (carriageIndex < _carriages.Length)
             {
+                _gameCameraController.ChangeCamStage(CameraMoveType.Up);
                 _carriages[carriageIndex].OpenCarriage();
                 carriageIndex++;
                 _trainWeight += _movementData.EachCarriageWaieght;
@@ -96,8 +118,9 @@ public class TrainController : MonoBehaviour
             Destroy(other.gameObject);
         }
 
-        if (other.CompareTag(Constants.Tags.FINISH))
+        if (other.CompareTag(Constants.Tags.FINISH) && GameManager.Instance.GameState != GameState.Finish)
         {
+            _gameCameraController.ChangeCamStage(CameraMoveType.FinishPosition);
             _eventData.OnFinish?.Invoke();
         }
     }
@@ -105,8 +128,8 @@ public class TrainController : MonoBehaviour
     private void Update()
     {
         if (!CanMove()) return;
-
-        _fuel -= _trainWeight * Time.deltaTime;
+        if (_fuel > 100) _fuel = 100;
+        _fuel -= _trainWeight * Time.deltaTime / 2;
         UIController.Instance.SetFuelBarValue(_fuel / _movementData.MaxFuelAmount);
     }
 
@@ -160,7 +183,6 @@ public class TrainController : MonoBehaviour
         
         return false;
     }
-
 
     IEnumerator SpeedUp()
     {

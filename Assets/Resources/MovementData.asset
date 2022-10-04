@@ -21,3 +21,4 @@ MonoBehaviour:
   maxFuelAmount: 100
   startTrainWeight: 1
   eachCarriageWaieght: 1
+  scoreUpdateValue: 1

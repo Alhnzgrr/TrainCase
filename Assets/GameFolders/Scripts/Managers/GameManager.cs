@@ -12,7 +12,10 @@ public class GameManager : MonoSingleton<GameManager>
     [SerializeField] int levelCount;
     [SerializeField] int randomLevelLowerLimit;
     [SerializeField] int goldCoefficient;
-    
+
+    private int score;
+    public int Score => score;
+
     GameState _gameState = GameState.Idle;
 
     public GameState GameState
@@ -25,7 +28,6 @@ public class GameManager : MonoSingleton<GameManager>
     {
         return _gameState == GameState.Play;
     }
-
     public int Level
     {
         get
@@ -46,24 +48,6 @@ public class GameManager : MonoSingleton<GameManager>
             }
         }
         set => PlayerPrefs.SetInt("Level", value);
-    }
-
-    public int Gold
-    {
-        get => PlayerPrefs.GetInt("Gold");
-        set => PlayerPrefs.SetInt("Gold", value);
-    }
-
-    public int OstensibleLevel
-    {
-        get => PlayerPrefs.GetInt("OstensibleLevel");
-        set => PlayerPrefs.SetInt("OstensibleLevel", value);
-    }
-
-    public int Score
-    {
-        get => PlayerPrefs.GetInt("Score");
-        set => PlayerPrefs.SetInt("Score", value);
     }
 
     private void Awake()
@@ -112,6 +96,7 @@ public class GameManager : MonoSingleton<GameManager>
     public void NextLevel()
     {
         _gameState = GameState.Idle;
+        score = 0;
         Level++;
         SceneManager.LoadScene(Level);
     }
@@ -119,6 +104,12 @@ public class GameManager : MonoSingleton<GameManager>
     public void RestartLevel()
     {
         _gameState = GameState.Idle;
+        score = 0;
         SceneManager.LoadScene(Level);
+    }
+    public void ScoreUpdate(int getScore)
+    {
+        score++;
+        UIController.Instance.ScoreTextUpdate(score);
     }
 }
